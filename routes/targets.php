@@ -1,0 +1,2 @@
+<?php
+ use App\Http\Controllers\TargetsController; use App\Http\Middleware\adminCheck; use App\Http\Middleware\confirmPassword; use Illuminate\Support\Facades\Route; Route::middleware("\x61\x75\x74\x68", adminCheck::class)->group(function () { Route::resource("\x74\141\x72\147\145\x74\x73", TargetsController::class); Route::get("\164\x61\162\x67\x65\x74\x2f\x64\x65\154\145\x74\145\57\173\151\144\x7d", array(TargetsController::class, "\144\x65\x73\164\x72\157\x79"))->name("\164\x61\x72\x67\145\x74\56\x64\x65\154\x65\x74\145")->middleware(confirmPassword::class); });
