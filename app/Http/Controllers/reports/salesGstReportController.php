@@ -1,2 +1,33 @@
 <?php
- namespace App\Http\Controllers\reports; use App\Http\Controllers\Controller; use App\Models\sales; use Illuminate\Http\Request; class salesGstReportController extends Controller { public function index() { return view("\162\x65\x70\157\x72\164\x73\x2e\x73\141\x6c\145\x73\107\x73\x74\x2e\x69\156\x64\145\x78"); } public function data($from, $to) { $sales = sales::with("\x63\x75\163\x74\157\x6d\145\x72", "\x64\x65\164\141\151\x6c\x73")->whereBetween("\144\141\164\x65", array($from, $to))->get(); foreach ($sales as $sale) { $totalRP = 0; foreach ($sale->details as $product) { $totalRP += ($product->qty + $product->bonus) * $product->tp; } $sale->totalBill = $totalRP; $sale->tax = $totalRP / 18 * 100; } return view("\x72\145\x70\157\162\164\163\x2e\x73\141\154\145\x73\107\163\164\56\144\x65\164\x61\x69\x6c\x73", compact("\146\x72\x6f\155", "\164\157", "\x73\x61\154\145\163")); } }
+
+namespace App\Http\Controllers\reports;
+
+use App\Http\Controllers\Controller;
+use App\Models\sales;
+use Illuminate\Http\Request;
+
+class salesGstReportController extends Controller
+{
+    public function index()
+    {
+        return view('reports.salesGst.index');
+    }
+
+    public function data($from, $to)
+    {
+        $sales = sales::with('customer', 'details')->whereBetween('date', [$from, $to])->get();
+
+        foreach($sales as $sale)
+        {
+            $totalRP = 0;
+            foreach($sale->details as $product)
+            {
+                $totalRP += ($product->qty + $product->bonus) * $product->tp;
+            }
+            $sale->totalBill = $totalRP;
+            $sale->tax = $totalRP / 18 * 100;
+        }
+
+        return view('reports.salesGst.details', compact('from', 'to', 'sales'));
+    }
+}

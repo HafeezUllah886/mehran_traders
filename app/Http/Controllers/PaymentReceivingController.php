@@ -1,2 +1,119 @@
 <?php
- namespace App\Http\Controllers; use App\Models\accounts; use App\Models\paymentReceiving; use App\Models\transactions; use Barryvdh\DomPDF\Facade\Pdf; use Illuminate\Http\Request; use Illuminate\Support\Facades\DB; class PaymentReceivingController extends Controller { public function index() { $receivings = paymentReceiving::orderBy("\x69\x64", "\x64\x65\163\143")->get(); $froms = accounts::where("\x74\x79\x70\145", "\x21\x3d", "\x42\165\163\151\x6e\x65\x73\163")->get(); $accounts = accounts::Business()->get(); return view("\x46\151\x6e\141\156\143\x65\56\162\145\x63\145\151\x76\151\x6e\147\x2e\151\156\x64\x65\x78", compact("\162\145\143\145\151\166\151\x6e\147\163", "\x66\x72\x6f\155\x73", "\x61\x63\x63\157\x75\156\164\163")); } public function create() { } public function store(Request $request) { try { DB::beginTransaction(); $ref = getRef(); paymentReceiving::create(array("\x66\162\x6f\155\x49\104" => $request->fromID, "\x74\x6f\x49\x44" => $request->accountID, "\x75\x73\x65\162\111\x44" => auth()->user()->id, "\141\155\157\x75\x6e\x74" => $request->amount, "\144\141\164\x65" => $request->date, "\x6e\x6f\x74\x65\x73" => $request->notes, "\x72\x65\146\111\x44" => $ref)); createTransaction($request->accountID, $request->date, $request->amount, 0, "\x41\x6d\157\x75\156\164\40\x52\145\143\145\151\166\x65\x64\x20\74\142\x72\x3e" . $request->notes, $ref); createTransaction($request->fromID, $request->date, $request->amount, 0, "\x41\155\x6f\x75\x6e\164\x20\122\145\143\x65\151\166\145\144\40\74\142\164\76" . $request->notes, $ref); DB::commit(); return back()->with("\x73\x75\x63\143\145\x73\x73", "\x52\145\x63\x65\151\x70\164\x20\x53\x61\166\145\x64"); } catch (\Exception $e) { DB::rollBack(); return back()->with("\145\162\x72\x6f\x72", $e->getMessage()); } } public function show($id) { $receiving = paymentReceiving::find($id); return view("\106\x69\x6e\141\156\x63\145\x2e\x72\145\143\145\151\166\151\x6e\x67\56\162\x65\x63\x65\151\160\x74", compact("\x72\145\143\145\151\166\x69\156\x67")); } public function pdf($id) { $receiving = paymentReceiving::find($id); $pdf = Pdf::loadview("\x46\151\x6e\x61\156\x63\145\56\x72\145\x63\x65\151\x76\x69\156\x67\56\160\x64\x66", compact("\x72\145\143\145\151\x76\x69\x6e\x67")); $pdf->set_paper("\154\145\164\x74\x65\x72", "\x6c\x61\x6e\144\163\143\x61\160\145"); return $pdf->download("\x52\145\143\x65\151\166\x69\156\x67\x20\55\x20{$receiving->refID}\x2e\x70\x64\146"); } public function edit(paymentReceiving $paymentReceiving) { } public function update(Request $request, paymentReceiving $paymentReceiving) { } public function delete($ref) { try { DB::beginTransaction(); paymentReceiving::where("\162\145\x66\x49\x44", $ref)->delete(); transactions::where("\x72\x65\146\x49\104", $ref)->delete(); DB::commit(); session()->forget("\x63\x6f\x6e\x66\x69\162\x6d\145\144\137\160\141\163\163\167\157\162\144"); return redirect()->route("\x72\145\x63\145\x69\x76\x69\156\147\163\56\x69\156\144\x65\170")->with("\x73\165\x63\143\145\x73\x73", "\122\145\143\145\151\166\151\x6e\x67\x20\x44\x65\x6c\x65\164\145\144"); } catch (\Exception $e) { DB::rollBack(); session()->forget("\x63\157\156\146\151\162\155\145\x64\137\x70\141\163\163\167\x6f\x72\x64"); return redirect()->route("\x72\145\143\x65\x69\x76\151\x6e\147\163\56\151\156\144\145\x78")->with("\x65\x72\x72\x6f\x72", $e->getMessage()); } } }
+
+namespace App\Http\Controllers;
+
+use App\Models\accounts;
+use App\Models\paymentReceiving;
+use App\Models\transactions;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class PaymentReceivingController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $receivings = paymentReceiving::orderBy('id', 'desc')->get();
+        $froms = accounts::where('type', '!=', 'Business')->get();
+        $accounts = accounts::Business()->get();
+
+        return view('Finance.receiving.index', compact('receivings', 'froms', 'accounts'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        try
+        {
+            DB::beginTransaction();
+            $ref = getRef();
+            paymentReceiving::create(
+                [
+                    'fromID' => $request->fromID,
+                    'toID' => $request->accountID,
+                    'userID' => auth()->user()->id,
+                    'amount' => $request->amount,
+                    'date' => $request->date,
+                    'notes' => $request->notes,
+                    'refID' => $ref,
+                ]
+            );
+
+            createTransaction($request->accountID, $request->date, $request->amount, 0, "Amount Received <br>" . $request->notes, $ref);
+            createTransaction($request->fromID, $request->date, $request->amount, 0, "Amount Received <bt>" . $request->notes, $ref);
+
+            DB::commit();
+            return back()->with('success', 'Receipt Saved');
+        }
+        catch(\Exception $e)
+        {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        $receiving = paymentReceiving::find($id);
+        return view('Finance.receiving.receipt', compact('receiving'));
+    }
+
+    public function pdf($id)
+    {
+        $receiving = paymentReceiving::find($id);
+        $pdf = Pdf::loadview('Finance.receiving.pdf', compact('receiving'));
+        $pdf->set_paper('letter', 'landscape');
+        return $pdf->download("Receiving - $receiving->refID.pdf");
+    }
+
+    public function edit(paymentReceiving $paymentReceiving)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, paymentReceiving $paymentReceiving)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function delete($ref)
+    {
+        try
+        {
+            DB::beginTransaction();
+            paymentReceiving::where('refID', $ref)->delete();
+            transactions::where('refID', $ref)->delete();
+            DB::commit();
+            session()->forget('confirmed_password');
+            return redirect()->route('receivings.index')->with('success', "Receiving Deleted");
+        }
+        catch(\Exception $e)
+        {
+            DB::rollBack();
+            session()->forget('confirmed_password');
+            return redirect()->route('receivings.index')->with('error', $e->getMessage());
+        }
+    }
+}

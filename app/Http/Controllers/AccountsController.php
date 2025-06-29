@@ -7,7 +7,7 @@ use App\Models\areas;
 use App\Models\transactions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
+use Symfony\Component\Finder\Exception\AccessDeniedException;
 
 class AccountsController extends Controller
 {

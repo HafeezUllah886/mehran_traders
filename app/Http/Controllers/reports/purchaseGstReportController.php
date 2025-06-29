@@ -1,2 +1,31 @@
 <?php
- namespace App\Http\Controllers\reports; use App\Http\Controllers\Controller; use App\Models\purchase; use Illuminate\Http\Request; class purchaseGstReportController extends Controller { public function index() { return view("\162\x65\x70\x6f\x72\x74\163\x2e\160\x75\x72\143\150\x61\163\145\x47\x73\x74\56\151\156\144\145\x78"); } public function data($from, $to) { $purchases = purchase::with("\x76\x65\156\x64\x6f\x72", "\144\145\x74\x61\x69\x6c\163")->whereBetween("\144\141\164\x65", array($from, $to))->get(); foreach ($purchases as $purchase) { $totalRP = 0; foreach ($purchase->details as $product) { $totalRP += ($product->qty + $product->bonus) * $product->tp; } $purchase->totalBill = $totalRP; } return view("\162\x65\x70\x6f\x72\164\x73\56\x70\165\x72\143\150\141\163\x65\107\x73\164\56\144\x65\x74\x61\x69\x6c\x73", compact("\x66\x72\157\x6d", "\x74\157", "\x70\x75\x72\x63\150\141\163\145\x73")); } }
+
+namespace App\Http\Controllers\reports;
+
+use App\Http\Controllers\Controller;
+use App\Models\purchase;
+use Illuminate\Http\Request;
+
+class purchaseGstReportController extends Controller
+{
+    public function index()
+    {
+        return view('reports.purchaseGst.index');
+    }
+
+    public function data($from, $to)
+    {
+        $purchases = purchase::with('vendor', 'details')->whereBetween('date', [$from, $to])->get();
+
+        foreach($purchases as $purchase)
+        {
+            $totalRP = 0;
+            foreach($purchase->details as $product)
+            {
+                $totalRP += ($product->qty + $product->bonus) * $product->tp;
+            }
+            $purchase->totalBill = $totalRP;
+        }
+            return view('reports.purchaseGst.details', compact('from', 'to', 'purchases'));
+    }
+}

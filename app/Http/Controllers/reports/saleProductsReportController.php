@@ -1,2 +1,61 @@
 <?php
- namespace App\Http\Controllers\reports; use App\Http\Controllers\Controller; use App\Models\accounts; use App\Models\categories; use App\Models\products; use App\Models\sale_details; class saleProductsReportController extends Controller { public function index() { $customers = accounts::Customer()->get(); $categories = categories::all(); return view("\x72\145\160\x6f\x72\164\163\56\163\x61\154\145\x50\162\157\144\165\143\x74\163\x2e\151\x6e\144\x65\170", compact("\x63\x75\x73\x74\157\155\x65\162\163", "\x63\x61\x74\145\147\x6f\x72\x69\145\163")); } public function data($from, $to, $customerID, $categoryID) { $products = products::query(); if ($categoryID != "\x41\154\154") { $products->where("\x63\x61\164\x49\104", $categoryID); } $products = $products->get(); foreach ($products as $product) { $query = sale_details::where("\x70\162\157\x64\x75\143\x74\x49\x44", $product->id)->whereBetween("\x64\x61\x74\x65", array($from, $to)); if ($customerID != 0) { $query->whereHas("\x73\x61\x6c\x65", function ($q) use($customerID) { $q->where("\x63\x75\163\164\x6f\155\145\162\111\104", $customerID); }); } $qty = $query->sum("\x71\x74\x79"); $bonus = $query->sum("\142\157\x6e\x75\x73"); $product->qty = $qty; $product->bonus = $bonus; $product->price = avgSalePrice($from, $to, $product->id); } if ($customerID != 0) { $customer = accounts::find($customerID); $customer = $customer->title; } else { $customer = "\101\x6c\154"; } return view("\x72\145\160\157\162\164\163\56\163\x61\154\x65\x50\162\x6f\x64\x75\143\164\163\56\x64\x65\x74\141\151\154\163", compact("\146\162\x6f\x6d", "\x74\157", "\160\162\x6f\x64\x75\143\x74\x73", "\143\165\163\x74\x6f\x6d\x65\x72")); } }
+
+namespace App\Http\Controllers\reports;
+
+use App\Http\Controllers\Controller;
+use App\Models\accounts;
+use App\Models\categories;
+use App\Models\products;
+use App\Models\sale_details;
+
+class saleProductsReportController extends Controller
+{
+    public function index()
+    {
+        $customers = accounts::Customer()->get();
+        $categories = categories::all();
+        return view('reports.saleProducts.index', compact('customers', 'categories'));
+    }
+    public function data($from, $to, $customerID, $categoryID)
+    {
+       $products = products::query();
+
+       if($categoryID != "All")
+       {
+            $products->where('catID', $categoryID);
+       }
+
+       $products = $products->get();
+
+
+       foreach($products as $product)
+       {
+            $query = sale_details::where('productID', $product->id)
+                ->whereBetween('date', [$from, $to]);
+            
+            if ($customerID != 0) {
+                $query->whereHas('sale', function($q) use ($customerID) {
+                    $q->where('customerID', $customerID);
+                });
+            }
+            
+            $qty = $query->sum('qty');
+            $bonus = $query->sum('bonus');
+            $product->qty = $qty;
+            $product->bonus = $bonus;
+            $product->price = avgSalePrice($from,$to,$product->id);
+
+       }
+       if($customerID != 0)
+       {
+            $customer = accounts::find($customerID);
+            $customer = $customer->title;
+        }
+        else
+        {
+            $customer = 'All';
+        }
+
+        return view('reports.saleProducts.details', compact('from', 'to', 'products', 'customer'));
+    }
+}

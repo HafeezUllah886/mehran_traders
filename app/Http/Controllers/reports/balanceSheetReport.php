@@ -1,2 +1,35 @@
 <?php
- namespace App\Http\Controllers\reports; use App\Http\Controllers\Controller; use App\Models\accounts; use App\Models\transactions; use Illuminate\Http\Request; class balanceSheetReport extends Controller { public function index() { $accounts = accounts::all(); return view("\162\145\160\x6f\x72\164\x73\56\x62\141\154\141\x6e\x63\x65\x53\150\145\x65\x74\56\x69\156\144\145\x78", compact("\x61\143\143\x6f\x75\x6e\164\x73")); } public function data($type, $from, $to) { $ids = accounts::where("\x74\x79\160\145", $type)->pluck("\x69\144")->toArray(); $transactions = transactions::whereIn("\141\x63\x63\157\x75\x6e\x74\x49\x44", $ids)->whereBetween("\144\141\164\x65", array($from, $to))->get(); $pre_cr = transactions::whereIn("\141\143\x63\157\165\x6e\x74\x49\104", $ids)->whereDate("\x64\141\164\145", "\74", $from)->sum("\x63\162"); $pre_db = transactions::whereIn("\x61\143\143\x6f\165\x6e\164\x49\x44", $ids)->whereDate("\144\141\x74\145", "\x3c", $from)->sum("\144\x62"); $pre_balance = $pre_cr - $pre_db; $cur_cr = transactions::whereIn("\x61\143\x63\x6f\165\156\x74\111\104", $ids)->sum("\x63\162"); $cur_db = transactions::whereIn("\x61\x63\143\157\165\x6e\164\x49\104", $ids)->sum("\144\x62"); $cur_balance = $cur_cr - $cur_db; return view("\162\x65\160\x6f\x72\164\x73\x2e\142\141\154\x61\x6e\x63\145\123\x68\145\145\164\x2e\x64\145\164\141\151\x6c\x73", compact("\x74\x79\x70\x65", "\x74\x72\141\x6e\x73\141\143\x74\x69\x6f\156\163", "\160\162\x65\137\x62\141\x6c\x61\x6e\x63\145", "\x63\165\162\137\x62\x61\154\x61\x6e\143\145", "\x66\x72\x6f\155", "\164\157")); } }
+
+namespace App\Http\Controllers\reports;
+
+use App\Http\Controllers\Controller;
+use App\Models\accounts;
+use App\Models\transactions;
+use Illuminate\Http\Request;
+
+class balanceSheetReport extends Controller
+{
+    public function index()
+    {
+        $accounts = accounts::all();
+        return view('reports.balanceSheet.index', compact('accounts'));
+    }
+
+    public function data($type, $from, $to)
+    {
+        $ids = accounts::where('type', $type)->pluck('id')->toArray();
+
+        $transactions = transactions::whereIn('accountID', $ids)->whereBetween('date', [$from, $to])->get();
+
+        $pre_cr = transactions::whereIn('accountID', $ids)->whereDate('date', '<', $from)->sum('cr');
+        $pre_db = transactions::whereIn('accountID', $ids)->whereDate('date', '<', $from)->sum('db');
+        $pre_balance = $pre_cr - $pre_db;
+
+        $cur_cr = transactions::whereIn('accountID', $ids)->sum('cr');
+        $cur_db = transactions::whereIn('accountID', $ids)->sum('db');
+
+        $cur_balance = $cur_cr - $cur_db;
+
+        return view('reports.balanceSheet.details', compact('type', 'transactions', 'pre_balance', 'cur_balance', 'from', 'to'));
+    }
+}

@@ -1,2 +1,90 @@
 <?php
- namespace App\Http\Controllers; use App\Models\town; use App\Http\Controllers\Controller; use Illuminate\Http\Request; class TownController extends Controller { public function index() { } public function create() { } public function store(Request $request) { $request->validate(array("\156\x61\155\145" => "\162\145\161\x75\151\x72\145\x64\174\x75\156\x69\161\x75\x65\x3a\164\x6f\x77\x6e\163\54\156\141\x6d\145")); town::create(array("\x6e\141\155\145" => $request->name)); return back()->with("\163\165\x63\143\145\x73\163", "\x54\157\x77\x6e\x20\103\x72\145\141\164\145\x64"); } public function show(town $town) { } public function edit(town $town) { } public function update(Request $request, town $town) { $request->validate(array("\156\x61\x6d\x65" => "\x72\x65\161\165\x69\x72\x65\x64\174\165\156\x69\161\x75\145\72\x74\x6f\167\x6e\163\54\x6e\141\155\145\x2c" . $town->id)); $town->update(array("\156\141\x6d\145" => $request->name)); return back()->with("\x73\165\x63\143\x65\x73\x73", "\x54\157\167\x6e\x20\x55\160\144\141\x74\x65\144"); } public function destroy(town $town) { } }
+
+namespace App\Http\Controllers;
+
+use App\Models\town;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+class TownController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        //
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate(
+            [
+                'name' => 'required|unique:towns,name'
+            ]
+        );
+
+        town::create(
+            [
+                'name' => $request->name
+            ]
+        );
+
+        return back()->with('success', 'Town Created');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(town $town)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(town $town)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, town $town)
+    {
+        $request->validate(
+            [
+                'name' => 'required|unique:towns,name,' . $town->id,
+            ]
+        );
+
+        $town->update(
+            [
+                'name' => $request->name,
+            ]
+        );
+
+        return back()->with('success', "Town Updated");
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(town $town)
+    {
+        //
+    }
+}

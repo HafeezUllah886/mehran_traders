@@ -1,2 +1,73 @@
 <?php
- namespace App\Http\Controllers; use App\Models\warehouses; use Illuminate\Http\Request; use Illuminate\Support\Facades\DB; class WarehousesController extends Controller { public function index() { $warehouses = warehouses::all(); return view("\x77\141\162\145\x68\157\165\163\x65\163\56\151\x6e\144\145\x78", compact("\167\141\x72\x65\150\x6f\165\163\145\163")); } public function create() { } public function store(Request $request) { warehouses::create($request->all()); return back()->with("\163\x75\143\143\145\163\x73", "\x57\x61\162\145\x68\157\165\163\145\x20\x43\162\x65\x61\x74\x65\x64"); } public function show(warehouses $warehouses) { } public function edit(warehouses $warehouses) { } public function update(Request $request, warehouses $warehouse) { $warehouse->update($request->all()); return back()->with("\x73\165\143\x63\145\163\163", "\127\x61\x72\145\150\x6f\165\163\145\40\x55\x70\x64\141\164\145\144"); } public function destroy(warehouses $warehouses) { } }
+
+namespace App\Http\Controllers;
+
+use App\Models\warehouses;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class WarehousesController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $warehouses = warehouses::all();
+
+        return view('warehouses.index', compact('warehouses'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+
+        warehouses::create($request->all());
+
+        return back()->with("success", "Warehouse Created");
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(warehouses $warehouses)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(warehouses $warehouses)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, warehouses $warehouse)
+    {
+        $warehouse->update($request->all());
+
+        return back()->with('success', "Warehouse Updated");
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(warehouses $warehouses)
+    {
+        //
+    }
+}

@@ -1,2 +1,116 @@
 <?php
- namespace App\Http\Controllers; use App\Models\accounts; use App\Models\purchase; use App\Models\purchase_payments; use App\Models\transactions; use Illuminate\Http\Request; use Illuminate\Support\Facades\DB; class PurchasePaymentsController extends Controller { public function index($id) { $purchase = purchase::with("\x64\145\164\141\151\154\163", "\x70\141\x79\x6d\x65\x6e\x74\163")->find($id); $amount = $purchase->details->sum("\141\x6d\157\x75\156\164"); $paid = $purchase->payments->sum("\141\x6d\157\x75\156\164"); $due = $amount - $paid; $accounts = accounts::business()->get(); return view("\160\x75\x72\x63\x68\141\163\x65\56\x70\141\x79\x6d\x65\x6e\x74\163", compact("\x70\165\162\x63\150\x61\163\145", "\x64\x75\x65", "\141\143\143\157\165\156\x74\163")); } public function create() { } public function store(Request $request) { try { DB::beginTransaction(); $ref = getRef(); $purchase = purchase::find($request->purchaseID); purchase_payments::create(array("\x70\x75\x72\143\150\x61\163\145\x49\104" => $purchase->id, "\x61\x63\143\157\165\156\x74\111\x44" => $request->accountID, "\x64\141\164\145" => $request->date, "\141\155\x6f\165\x6e\164" => $request->amount, "\156\157\164\x65\163" => $request->notes, "\162\145\146\x49\104" => $ref)); createTransaction($request->accountID, $request->date, 0, $request->amount, "\x50\x61\171\x6d\145\156\164\40\157\146\40\x50\x75\162\x63\x68\141\x73\x65\x20\116\x6f\x2e\40{$purchase->id}", $ref); createTransaction($purchase->vendorID, $request->date, $request->amount, 0, "\x50\x61\171\155\145\x6e\164\x20\157\146\x20\x50\165\162\x63\150\141\163\x65\40\x4e\157\56\40{$purchase->id}", $ref); DB::commit(); return back()->with("\163\x75\x63\143\145\163\163", "\120\x61\x79\155\x65\x6e\164\x20\x53\141\x76\x65\x64"); } catch (\Exception $e) { DB::rollBack(); return back()->with("\x65\162\x72\157\162", $e->getMessage()); } } public function show(purchase_payments $purchase_payments) { } public function edit(purchase_payments $purchase_payments) { } public function update(Request $request, purchase_payments $purchase_payments) { } public function destroy($id, $ref) { try { DB::beginTransaction(); purchase_payments::where("\162\145\146\111\104", $ref)->delete(); transactions::where("\x72\x65\146\111\104", $ref)->delete(); DB::commit(); session()->forget("\143\x6f\156\146\x69\x72\x6d\x65\144\x5f\160\x61\163\163\167\157\x72\x64"); return redirect()->route("\160\x75\x72\x63\150\141\x73\x65\x50\x61\171\x6d\x65\x6e\x74\56\151\x6e\144\x65\x78", $id)->with("\x73\x75\143\143\x65\163\163", "\120\x75\162\143\x68\141\163\x65\40\x50\141\x79\x6d\145\156\x74\x20\104\x65\154\145\164\145\144"); } catch (\Exception $e) { DB::rollBack(); session()->forget("\143\x6f\x6e\x66\x69\x72\x6d\x65\x64\137\160\141\x73\163\167\x6f\x72\x64"); return redirect()->route("\160\x75\162\143\150\x61\x73\145\x50\x61\171\x6d\x65\156\x74\56\x69\x6e\144\145\x78", $id)->with("\x65\x72\x72\157\162", $e->getMessage()); } } }
+
+namespace App\Http\Controllers;
+
+use App\Models\accounts;
+use App\Models\purchase;
+use App\Models\purchase_payments;
+use App\Models\transactions;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class PurchasePaymentsController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index($id)
+    {
+        $purchase = purchase::with('details', 'payments')->find($id);
+        $amount = $purchase->details->sum('amount');
+        $paid = $purchase->payments->sum('amount');
+        $due = $amount - $paid;
+
+        $accounts = accounts::business()->get();
+
+        return view('purchase.payments', compact('purchase', 'due', 'accounts'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        try{
+            DB::beginTransaction();
+            $ref = getRef();
+            $purchase = purchase::find($request->purchaseID);
+            purchase_payments::create(
+                [
+                    'purchaseID'    => $purchase->id,
+                    'accountID'     => $request->accountID,
+                    'date'          => $request->date,
+                    'amount'        => $request->amount,
+                    'notes'         => $request->notes,
+                    'refID'         => $ref,
+                ]
+            );
+
+            createTransaction($request->accountID, $request->date, 0, $request->amount, "Payment of Purchase No. $purchase->id", $ref);
+            createTransaction($purchase->vendorID, $request->date, $request->amount, 0, "Payment of Purchase No. $purchase->id", $ref);
+
+            DB::commit();
+            return back()->with('success', "Payment Saved");
+        }
+        catch(\Exception $e)
+        {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
+
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(purchase_payments $purchase_payments)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(purchase_payments $purchase_payments)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, purchase_payments $purchase_payments)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id, $ref)
+    {
+        try
+        {
+            DB::beginTransaction();
+            purchase_payments::where('refID', $ref)->delete();
+            transactions::where('refID', $ref)->delete();
+            DB::commit();
+            session()->forget('confirmed_password');
+            return redirect()->route('purchasePayment.index', $id)->with('success', "Purchase Payment Deleted");
+        }
+        catch(\Exception $e)
+        {
+            DB::rollBack();
+            session()->forget('confirmed_password');
+            return redirect()->route('purchasePayment.index', $id)->with('error', $e->getMessage());
+        }
+    }
+}

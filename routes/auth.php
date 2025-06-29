@@ -1,2 +1,24 @@
 <?php
- use App\Http\Controllers\authController; use App\Http\Controllers\confirmPasswordController; use App\Http\Controllers\OrderbookerController; use App\Http\Controllers\profileController; use App\Http\Middleware\adminCheck; use Illuminate\Support\Facades\Route; goto JpnBZ; un3ys: Route::post("\57\154\157\x67\x69\x6e", array(authController::class, "\x6c\157\147\x69\x6e"))->name("\163\151\x67\156\151\x6e"); goto R5M3g; JpnBZ: Route::get("\57\x6c\157\x67\x69\156", array(authController::class, "\x69\156\144\x65\x78"))->name("\x6c\157\147\151\x6e")->middleware("\147\x75\x65\163\x74"); goto un3ys; R5M3g: Route::middleware("\x61\x75\x74\150")->group(function () { Route::get("\x2f\x63\x6f\x6e\146\151\x72\155\x2d\160\x61\x73\x73\x77\157\x72\x64", array(confirmPasswordController::class, "\163\150\x6f\x77\x43\157\x6e\146\151\162\x6d\120\141\x73\163\x77\157\162\x64\x46\x6f\x72\155"))->name("\x63\x6f\156\x66\151\x72\x6d\x2d\x70\x61\x73\163\167\x6f\162\x64"); Route::post("\57\x63\157\156\146\151\x72\x6d\55\160\x61\163\163\x77\x6f\x72\144", array(confirmPasswordController::class, "\143\157\x6e\x66\151\162\155\x50\141\x73\163\x77\157\x72\144")); Route::get("\x2f\x6c\157\x67\x6f\165\x74", array(authController::class, "\x6c\x6f\x67\x6f\165\x74"))->name("\154\x6f\147\x6f\x75\164"); Route::get("\x2f\x70\x72\157\x66\151\154\145", array(profileController::class, "\x69\x6e\144\145\170"))->name("\x70\x72\x6f\146\x69\154\145"); Route::post("\57\x70\x72\x6f\x66\x69\x6c\x65\x2f\165\160\144\141\164\145", array(profileController::class, "\x75\x70\x64\x61\x74\x65"))->name("\165\160\144\141\164\145\120\162\157\146\x69\154\x65"); Route::post("\x2f\160\x72\157\x66\x69\154\x65\x2f\143\x68\141\x6e\x67\x65\160\x61\x73\163\167\157\162\x64", array(profileController::class, "\143\150\x61\x6e\x67\x65\120\141\x73\x73\x77\x6f\x72\x64"))->name("\143\x68\141\x6e\147\x65\x50\141\x73\163\x77\157\162\x64"); Route::resource("\x6f\162\144\145\x72\x62\x6f\157\153\x65\162", OrderbookerController::class)->middleware(adminCheck::class); });
+
+use App\Http\Controllers\authController;
+use App\Http\Controllers\confirmPasswordController;
+use App\Http\Controllers\OrderbookerController;
+use App\Http\Controllers\profileController;
+use App\Http\Middleware\adminCheck;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/login', [authController::class, 'index'])->name('login')->middleware("guest");
+Route::post('/login', [authController::class, 'login'])->name('signin');
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/confirm-password', [confirmPasswordController::class, 'showConfirmPasswordForm'])->name('confirm-password');
+    Route::post('/confirm-password', [confirmPasswordController::class, 'confirmPassword']);
+
+    Route::get('/logout', [authController::class, 'logout'])->name('logout');
+    Route::get('/profile', [profileController::class, 'index'])->name('profile');
+    Route::post('/profile/update', [profileController::class, 'update'])->name('updateProfile');
+    Route::post('/profile/changepassword', [profileController::class, 'changePassword'])->name('changePassword');
+
+    Route::resource('orderbooker', OrderbookerController::class)->middleware(adminCheck::class);
+});

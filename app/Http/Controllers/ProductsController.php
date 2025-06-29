@@ -1,2 +1,94 @@
 <?php
- namespace App\Http\Controllers; use App\Models\categories; use App\Models\products; use App\Models\units; use Illuminate\Http\Request; class ProductsController extends Controller { public function index() { $items = products::all(); $units = units::all(); $cats = categories::orderBy("\x6e\x61\155\x65", "\x61\163\143")->get(); return view("\x70\162\x6f\144\165\x63\x74\x73\x2e\x70\162\x6f\144\165\143\164", compact("\151\x74\145\x6d\163", "\x75\x6e\151\164\x73", "\x63\141\164\x73")); } public function create() { } public function store(Request $request) { $request->validate(array("\x6e\141\x6d\x65" => "\x75\156\x69\x71\x75\145\x3a\x70\162\157\x64\x75\x63\164\x73\x2c\x6e\x61\155\x65"), array("\156\141\x6d\x65\x2e\165\x6e\x69\x71\x75\x65" => "\x50\162\157\x64\x75\x63\x74\x20\141\154\162\145\141\x64\171\40\x45\170\x69\163\164\x69\156\x67")); products::create($request->all()); return back()->with("\163\x75\143\x63\x65\x73\x73", "\120\162\157\144\x75\x63\164\40\103\x72\145\141\164\x65\x64"); } public function show($all) { $categories = categories::with("\x70\x72\x6f\x64\x75\143\x74\x73")->get(); return view("\160\x72\157\144\165\143\x74\x73\56\160\x72\x69\x63\x65\154\x69\x73\x74", compact("\143\141\x74\x65\147\x6f\x72\x69\x65\x73")); } public function edit(products $products) { } public function update(Request $request, $id) { $request->validate(array("\156\141\155\x65" => "\165\156\x69\161\165\x65\72\160\x72\x6f\x64\x75\x63\164\163\x2c\156\141\x6d\x65\54" . $id), array("\156\141\x6d\145\56\165\x6e\x69\161\x75\x65" => "\x50\x72\157\144\165\143\x74\x20\x61\154\x72\145\141\144\x79\40\x45\x78\151\x73\x74\x69\156\x67")); $product = products::find($id); $product->update($request->all()); return back()->with("\163\x75\143\x63\145\x73\x73", "\120\162\157\x64\x75\143\x74\x20\125\x70\144\141\164\145\144"); } public function destroy(products $products) { } }
+
+namespace App\Http\Controllers;
+
+use App\Models\categories;
+use App\Models\products;
+use App\Models\units;
+use Illuminate\Http\Request;
+
+class ProductsController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $items = products::all();
+        $units = units::all();
+        $cats = categories::orderBy('name', 'asc')->get();
+        return view('products.product', compact('items', 'units', 'cats'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate(
+            [
+                'name' => "unique:products,name",
+            ],
+            [
+            'name.unique' => "Product already Existing",
+            ]
+        );
+
+        products::create($request->all());
+
+        return back()->with('success', 'Product Created');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($all)
+    {
+        $categories = categories::with('products')->get();
+        return view('products.pricelist', compact('categories'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(products $products)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate(
+            [
+                'name' => "unique:products,name,".$id,
+            ],
+            [
+            'name.unique' => "Product already Existing",
+            ]
+        );
+
+        $product = products::find($id);
+        $product->update($request->all());
+
+        return back()->with('success', 'Product Updated');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(products $products)
+    {
+        //
+    }
+}

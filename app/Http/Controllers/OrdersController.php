@@ -1,2 +1,246 @@
 <?php
- namespace App\Http\Controllers; use App\Models\accounts; use App\Models\order_details; use App\Models\orders; use App\Models\products; use App\Models\units; use App\Models\User; use App\Models\warehouses; use Exception; use Illuminate\Http\Request; use Illuminate\Support\Facades\DB; class OrdersController extends Controller { public function index(Request $request) { $start = $request->start ?? now()->toDateString(); $end = $request->end ?? now()->toDateString(); dashboard(); if (Auth()->user()->role == "\101\x64\155\x69\156") { $orders = orders::whereBetween("\144\141\164\145", array($start, $end))->orderBy("\x69\x64", "\144\x65\163\143")->get(); } else { $orders = orders::where("\157\x72\144\x65\x72\x62\157\157\153\145\x72\x49\104", auth()->user()->id)->whereBetween("\144\x61\x74\x65", array($start, $end))->orderBy("\151\x64", "\144\x65\163\143")->get(); } return view("\157\162\144\145\162\163\56\x69\156\144\145\x78", compact("\157\x72\x64\145\x72\163", "\163\x74\x61\x72\x74", "\x65\156\144")); } public function create() { $products = products::all(); $customers = accounts::Customer()->get(); $units = units::all(); return view("\x6f\162\x64\x65\162\x73\x2e\143\162\x65\x61\x74\145", compact("\x70\162\x6f\x64\165\143\x74\163", "\143\165\x73\x74\x6f\155\x65\x72\163", "\165\x6e\151\x74\163")); } public function store(Request $request) { try { if ($request->isNotFilled("\x69\144")) { throw new Exception("\x50\154\x65\141\x73\145\x20\x53\x65\154\145\143\x74\x20\101\164\154\x65\141\163\164\40\x4f\x6e\145\40\120\162\x6f\144\x75\x63\164"); } DB::beginTransaction(); $ref = getRef(); $order = orders::create(array("\x6f\x72\x64\145\x72\x62\157\157\153\x65\x72\111\x44" => auth()->user()->id, "\143\165\163\x74\x6f\x6d\x65\x72\111\x44" => $request->customerID, "\x64\x61\x74\145" => $request->date, "\x6e\157\164\145\163" => $request->notes)); $ids = $request->id; $total = 0; foreach ($ids as $key => $id) { $unit = units::find($request->unit[$key]); $product = products::find($id); $qty = $request->qty[$key] * $unit->value; $price = $product->price - $request->discount[$key]; $amount = $qty * $price; $total += $amount; order_details::create(array("\157\162\x64\x65\x72\x49\x44" => $order->id, "\160\162\157\x64\165\x63\x74\x49\x44" => $id, "\160\x72\151\143\145" => $product->price, "\x71\x74\x79" => $qty, "\x64\x69\163\x63\x6f\x75\156\164" => $request->discount[$key], "\x62\x6f\x6e\x75\x73" => $request->bonus[$key] ?? 0, "\141\155\x6f\165\156\164" => $amount, "\x64\141\x74\145" => $request->date, "\165\x6e\151\164\x49\104" => $unit->id, "\165\x6e\151\164\x56\x61\x6c\x75\145" => $unit->value)); } $order->update(array("\x6e\145\164" => $total)); DB::commit(); return to_route("\x6f\162\144\x65\x72\163\56\x73\150\x6f\x77", $order->id)->with("\x73\165\x63\x63\145\x73\163", "\117\162\144\145\162\40\103\162\x65\141\164\x65\144"); } catch (\Exception $e) { DB::rollback(); return back()->with("\145\x72\x72\x6f\162", $e->getMessage()); } } public function show(orders $order) { return view("\x6f\162\x64\145\x72\163\56\166\x69\145\167", compact("\157\x72\x64\x65\x72")); } public function edit(orders $order) { $products = products::all(); $customers = accounts::Customer()->get(); $units = units::all(); return view("\x6f\x72\x64\145\x72\163\56\145\144\x69\x74", compact("\160\162\157\144\x75\143\164\163", "\x63\x75\x73\164\x6f\x6d\x65\x72\163", "\165\156\x69\164\163", "\x6f\162\x64\x65\x72")); } public function update(Request $request, orders $order) { try { if ($request->isNotFilled("\x69\144")) { throw new Exception("\120\x6c\145\141\x73\145\x20\123\145\154\x65\x63\164\x20\x41\x74\154\x65\141\163\164\40\117\x6e\x65\x20\x50\162\157\144\x75\x63\x74"); } DB::beginTransaction(); foreach ($order->details as $product) { $product->delete(); } $order->update(array("\143\165\x73\164\157\155\x65\x72\111\x44" => $request->customerID, "\144\141\164\x65" => $request->date, "\156\157\164\145\163" => $request->notes)); $ids = $request->id; $total = 0; foreach ($ids as $key => $id) { $unit = units::find($request->unit[$key]); $product = products::find($id); $qty = $request->qty[$key] * $unit->value; $price = $product->price - $request->discount[$key]; $amount = $qty * $price; $total += $amount; order_details::create(array("\x6f\x72\144\145\x72\x49\x44" => $order->id, "\x70\162\x6f\x64\x75\x63\x74\x49\x44" => $id, "\x70\x72\x69\x63\145" => $product->price, "\x71\x74\x79" => $qty, "\x64\151\163\x63\x6f\165\156\164" => $request->discount[$key], "\x62\157\156\x75\163" => $request->bonus[$key], "\141\x6d\157\x75\156\x74" => $amount, "\x64\141\164\x65" => $request->date, "\165\x6e\151\164\x49\x44" => $unit->id, "\x75\156\x69\164\126\x61\154\x75\145" => $unit->value)); } $order->update(array("\x6e\145\164" => $total)); DB::commit(); return to_route("\x6f\162\144\145\162\x73\56\x73\150\157\x77", $order->id)->with("\x73\x75\143\x63\x65\x73\163", "\117\x72\x64\x65\162\x20\125\x70\144\141\164\x65"); } catch (\Exception $e) { DB::rollback(); return back()->with("\145\162\162\157\x72", $e->getMessage()); } } public function destroy($id) { try { DB::beginTransaction(); $order = orders::find($id); foreach ($order->details as $product) { $product->delete(); } $order->delete(); DB::commit(); session()->forget("\143\x6f\156\146\151\162\155\x65\x64\137\x70\141\163\x73\167\157\x72\144"); return to_route("\157\162\144\145\162\x73\x2e\x69\156\144\x65\x78")->with("\x73\165\x63\143\145\163\163", "\x4f\162\144\x65\x72\x20\x44\145\154\x65\x74\x65\x64"); } catch (\Exception $e) { DB::rollBack(); session()->forget("\x63\157\156\x66\x69\162\155\145\144\137\160\141\163\163\167\157\x72\144"); return to_route("\x6f\x72\x64\145\x72\x73\x2e\151\x6e\x64\145\x78")->with("\145\162\x72\157\x72", $e->getMessage()); } } public function sale($id) { $products = products::orderby("\x6e\x61\x6d\x65", "\x61\x73\143")->get(); foreach ($products as $product) { $stock = getStock($product->id); $product->stock = $stock; } $units = units::all(); $customers = accounts::customer()->get(); $accounts = accounts::business()->get(); $orderbookers = User::where("\x72\x6f\154\145", "\117\162\144\x65\162\x62\157\x6f\x6b\x65\162")->get(); $order = orders::find($id); $warehouses = warehouses::all(); return view("\157\162\x64\x65\x72\163\x2e\x73\141\x6c\x65", compact("\x70\x72\x6f\144\165\x63\x74\163", "\165\x6e\151\x74\x73", "\x63\x75\x73\164\157\x6d\x65\162\x73", "\x61\143\143\x6f\165\156\x74\163", "\157\x72\144\x65\162\x62\157\x6f\153\145\162\x73", "\x6f\x72\x64\x65\162", "\167\x61\x72\145\x68\x6f\165\163\x65\163")); } }
+
+namespace App\Http\Controllers;
+
+use App\Models\accounts;
+use App\Models\order_details;
+use App\Models\orders;
+use App\Models\products;
+use App\Models\units;
+use App\Models\User;
+use App\Models\warehouses;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class OrdersController extends Controller
+{
+
+
+    public function index(Request $request)
+    {
+        $start = $request->start ?? now()->toDateString();
+        $end = $request->end ?? now()->toDateString();
+        dashboard();
+        if(Auth()->user()->role == "Admin")
+        {
+            $orders = orders::whereBetween("date", [$start, $end])->orderBy('id', 'desc')->get();
+        }
+        else
+        {
+            $orders = orders::where('orderbookerID', auth()->user()->id)->whereBetween("date", [$start, $end])->orderBy('id', 'desc')->get();
+        }
+
+        return view('orders.index', compact('orders', 'start', 'end'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $products = products::all();
+        $customers = accounts::Customer()->get();
+        $units = units::all();
+        return view('orders.create', compact('products', 'customers', 'units'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        try
+        {
+            if($request->isNotFilled('id'))
+            {
+                throw new Exception('Please Select Atleast One Product');
+            }
+
+            DB::beginTransaction();
+            $ref = getRef();
+            $order = orders::create(
+                [
+                  'orderbookerID'  => auth()->user()->id,
+                  'customerID'  => $request->customerID,
+                  'date'        => $request->date,
+                  'notes'       => $request->notes,
+                ]
+            );
+
+            $ids = $request->id;
+
+            $total = 0;
+            foreach($ids as $key => $id)
+            {
+                $unit = units::find($request->unit[$key]);
+                $product = products::find($id);
+                $qty = $request->qty[$key] * $unit->value;
+                $price = $product->price - $request->discount[$key];
+                $amount = $qty * $price;
+                $total += $amount;
+                order_details::create(
+                    [
+                        'orderID'       => $order->id,
+                        'productID'     => $id,
+                        'price'         => $product->price,
+                        'qty'           => $qty,
+                        'discount'      => $request->discount[$key],
+                        'bonus'         => $request->bonus[$key] ?? 0,
+                        'amount'        => $amount,
+                        'date'          => $request->date,
+                        'unitID'        => $unit->id,
+                        'unitValue'     => $unit->value,
+                    ]
+                );
+            }
+
+            $order->update(
+                [
+                    'net' => $total,
+                ]
+            );
+
+           DB::commit();
+            return to_route('orders.show', $order->id)->with('success', "Order Created");
+
+        }
+        catch(\Exception $e)
+        {
+            DB::rollback();
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(orders $order)
+    {
+        return view('orders.view',compact('order'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(orders $order)
+    {
+        $products = products::all();
+        $customers = accounts::Customer()->get();
+        $units = units::all();
+        return view('orders.edit', compact('products', 'customers', 'units', 'order'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, orders $order)
+    {
+        try
+        {
+            if($request->isNotFilled('id'))
+            {
+                throw new Exception('Please Select Atleast One Product');
+            }
+            DB::beginTransaction();
+            foreach($order->details as $product)
+            {
+                $product->delete();
+            }
+            $order->update(
+                [
+                  'customerID'  => $request->customerID,
+                  'date'        => $request->date,
+                  'notes'       => $request->notes,
+                ]
+            );
+
+            $ids = $request->id;
+
+            $total = 0;
+            foreach($ids as $key => $id)
+            {
+                $unit = units::find($request->unit[$key]);
+                $product = products::find($id);
+                $qty = $request->qty[$key] * $unit->value;
+                $price = $product->price - $request->discount[$key];
+                $amount = $qty * $price;
+                $total += $amount;
+                order_details::create(
+                    [
+                        'orderID'       => $order->id,
+                        'productID'     => $id,
+                        'price'         => $product->price,
+                        'qty'           => $qty,
+                        'discount'      => $request->discount[$key],
+                        'bonus'         => $request->bonus[$key],
+                        'amount'        => $amount,
+                        'date'          => $request->date,
+                        'unitID'        => $unit->id,
+                        'unitValue'     => $unit->value,
+                    ]
+                );
+            }
+
+            $order->update(
+                [
+                    'net' => $total,
+                ]
+            );
+
+           DB::commit();
+            return to_route('orders.show', $order->id)->with('success', "Order Update");
+
+        }
+        catch(\Exception $e)
+        {
+            DB::rollback();
+            return back()->with('error', $e->getMessage());
+        }
+
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+        try
+        {
+            DB::beginTransaction();
+            $order = orders::find($id);
+
+            foreach($order->details as $product)
+            {
+                $product->delete();
+            }
+            $order->delete();
+            DB::commit();
+            session()->forget('confirmed_password');
+            return to_route('orders.index')->with('success', "Order Deleted");
+        }
+        catch(\Exception $e)
+        {
+            DB::rollBack();
+            session()->forget('confirmed_password');
+            return to_route('orders.index')->with('error', $e->getMessage());
+        }
+    }
+
+    public function sale($id)
+    {
+        $products = products::orderby('name', 'asc')->get();
+        foreach($products as $product)
+        {
+            $stock = getStock($product->id);
+            $product->stock = $stock;
+        }
+        $units = units::all();
+        $customers = accounts::customer()->get();
+        $accounts = accounts::business()->get();
+        $orderbookers = User::where('role', 'Orderbooker')->get();
+        $order = orders::find($id);
+        $warehouses = warehouses::all();
+        return view('orders.sale', compact('products', 'units', 'customers', 'accounts', 'orderbookers', 'order', 'warehouses'));
+    }
+}

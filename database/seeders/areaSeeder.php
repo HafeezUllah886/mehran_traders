@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\areas;
+use App\Models\town;
 use App\Models\warehouses;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -14,9 +15,13 @@ class areaSeeder extends Seeder
      */
     public function run(): void
     {
-        $data = [
-            ['name' => "Area 1"],
+        $towns = [
+            ['name' => "Town 1"],
         ];
+        $data = [
+            ['name' => "Area 1", 'townID' => 1],
+        ];
+        town::insert($towns);
         areas::insert($data);
     }
 }

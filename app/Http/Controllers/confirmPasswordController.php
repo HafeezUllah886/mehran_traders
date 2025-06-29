@@ -1,2 +1,34 @@
 <?php
- namespace App\Http\Controllers; use Illuminate\Http\Request; use Illuminate\Support\Facades\Hash; use Illuminate\Support\Facades\Session; class confirmPasswordController extends Controller { public function showConfirmPasswordForm() { return view("\141\x75\164\150\x2e\x63\x6f\x6e\146\x69\x72\x6d\120\x61\163\x73\x77\157\x72\144"); } public function confirmPassword(Request $request) { $request->validate(array("\x70\141\163\163\x77\157\162\144" => "\x72\145\x71\165\x69\162\145\x64")); if (Hash::check($request->password, auth()->user()->password)) { session(array("\143\x6f\x6e\146\x69\162\155\x65\x64\x5f\x70\x61\x73\x73\x77\157\162\x64" => true)); $intendedUrl = Session::get("\x69\156\164\145\x6e\x64\145\144\x5f\165\x72\x6c", "\57"); Session::forget("\151\x6e\164\x65\x6e\144\x65\144\x5f\x75\x72\154"); return redirect($intendedUrl); } else { return redirect(Session::get("\x70\x72\145\166\137\165\162\x6c", "\57"))->with("\145\162\x72\157\162", "\127\162\x6f\x6e\147\x20\120\141\163\x73\x77\x6f\x72\144"); } } }
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
+
+class confirmPasswordController extends Controller
+{
+    public function showConfirmPasswordForm()
+{
+
+    return view('auth.confirmPassword');
+}
+
+public function confirmPassword(Request $request)
+{
+    $request->validate([
+        'password' => 'required', // Use your password validation rules
+    ]);
+
+    if (Hash::check($request->password, auth()->user()->password)) {
+        session(['confirmed_password' => true]);
+        // Get the intended URL from the session
+        $intendedUrl = Session::get('intended_url', '/');
+        Session::forget('intended_url'); // Clear the stored URL
+
+        return redirect($intendedUrl);
+    } else {
+        return redirect(Session::get('prev_url', '/'))->with('error', "Wrong Password");
+    }
+}
+}

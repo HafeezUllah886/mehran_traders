@@ -88,22 +88,20 @@ return [
     'locale' => env('APP_LOCALE', 'en'),
 
     'domains' => [
-        'khyber.test',
-        'jaffar-s.test',
-        'khyber.diamondqta.com',
-        'jaffartest.diamondquetta.com',
-        'jaffar.run',
+        'mehran_traders.test',
+        'mehran.nexgenpakistan.com',
+        'mehran_traders.run',
     ],
 
     'databases' => [
-        'u788011464_khyber',
-        'khyber',
+        'u788011464_mehran',
+        'mehran',
         'test',
     ],
 
     'files' =>
     [
-        '235235',
+        '70137',
     ],
 
     /*

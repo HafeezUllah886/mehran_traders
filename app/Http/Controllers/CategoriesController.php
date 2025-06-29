@@ -1,2 +1,70 @@
 <?php
- namespace App\Http\Controllers; use App\Models\categories; use Illuminate\Http\Request; use PHPUnit\Framework\Attributes\BackupGlobals; class CategoriesController extends Controller { public function index() { $cats = categories::orderBy("\x6e\141\155\x65", "\141\x73\143")->get(); return view("\160\162\x6f\x64\165\143\x74\163\x2e\x63\141\x74\x65\147\x6f\162\x69\145\163", compact("\x63\x61\x74\163")); } public function create() { } public function store(Request $request) { categories::create($request->all()); return back()->with("\x6d\x73\147", "\103\141\164\x65\147\157\x72\171\x20\x43\162\x65\141\x74\x65\x64"); } public function show(categories $categories) { } public function edit(categories $categories) { } public function update(Request $request, $id) { categories::find($id)->update($request->all()); return back()->with("\155\163\x67", "\103\141\x74\x65\147\157\x72\x79\x20\125\160\x64\x61\x74\145\144"); } public function destroy(categories $categories) { } }
+
+namespace App\Http\Controllers;
+
+use App\Models\categories;
+use Illuminate\Http\Request;
+use PHPUnit\Framework\Attributes\BackupGlobals;
+
+class CategoriesController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $cats = categories::orderBy('name', 'asc')->get();
+
+        return view('products.categories', compact('cats'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        categories::create($request->all());
+        return back()->with('msg', 'Category Created');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(categories $categories)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(categories $categories)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        categories::find($id)->update($request->all());
+        return back()->with('msg', 'Category Updated');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(categories $categories)
+    {
+        //
+    }
+}

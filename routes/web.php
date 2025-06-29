@@ -1,2 +1,35 @@
 <?php
- use App\Http\Controllers\AreaController; use App\Http\Controllers\CategoriesController; use App\Http\Controllers\dashboardController; use App\Http\Controllers\ProductsController; use App\Http\Controllers\TownController; use App\Http\Controllers\UnitsController; use App\Http\Controllers\WarehousesController; use App\Http\Middleware\adminCheck; use Illuminate\Support\Facades\Route; goto Kpdgo; Kpdgo: require __DIR__ . "\x2f\x61\165\164\x68\x2e\x70\x68\x70"; goto YQSfs; vJRkK: require __DIR__ . "\x2f\163\141\154\x65\56\x70\x68\160"; goto KR1HV; TIfOW: require __DIR__ . "\57\164\x61\x72\x67\x65\x74\x73\56\x70\x68\x70"; goto zLB42; AQNH1: require __DIR__ . "\57\x70\165\x72\143\150\x61\x73\x65\x2e\x70\150\160"; goto dK1Rt; dK1Rt: require __DIR__ . "\57\x73\x74\x6f\143\153\56\160\x68\x70"; goto vJRkK; YQSfs: require __DIR__ . "\x2f\x66\151\x6e\141\x6e\x63\145\x2e\160\150\x70"; goto AQNH1; KR1HV: require __DIR__ . "\x2f\x72\145\160\157\x72\164\163\56\160\150\x70"; goto iHr0W; iHr0W: require __DIR__ . "\57\157\162\144\x65\162\x73\x2e\160\x68\x70"; goto TIfOW; zLB42: Route::middleware("\x61\x75\164\150")->group(function () { Route::get("\57", array(dashboardController::class, "\151\x6e\x64\145\170"))->name("\x64\x61\163\x68\x62\x6f\141\x72\x64"); Route::resource("\x75\x6e\x69\x74\x73", UnitsController::class)->middleware(adminCheck::class); Route::resource("\143\141\164\145\147\157\162\151\145\x73", CategoriesController::class)->middleware(adminCheck::class); Route::resource("\x70\162\x6f\x64\165\x63\164", ProductsController::class)->middleware(adminCheck::class); Route::resource("\x77\x61\162\x65\x68\157\x75\x73\x65\x73", WarehousesController::class); Route::resource("\164\x6f\x77\156\163", TownController::class); Route::resource("\141\x72\145\141\x73", AreaController::class); });
+
+use App\Http\Controllers\AreaController;
+use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\dashboardController;
+use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\TownController;
+use App\Http\Controllers\UnitsController;
+use App\Http\Controllers\WarehousesController;
+use App\Http\Middleware\adminCheck;
+use Illuminate\Support\Facades\Route;
+
+
+require __DIR__ . '/auth.php';
+require __DIR__ . '/finance.php';
+require __DIR__ . '/purchase.php';
+require __DIR__ . '/stock.php';
+require __DIR__ . '/sale.php';
+require __DIR__ . '/reports.php';
+require __DIR__ . '/orders.php';
+require __DIR__ . '/targets.php';
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/', [dashboardController::class, 'index'])->name('dashboard');
+    Route::resource('units', UnitsController::class)->middleware(adminCheck::class);
+    Route::resource('categories', CategoriesController::class)->middleware(adminCheck::class);
+    Route::resource('product', ProductsController::class)->middleware(adminCheck::class);
+    Route::resource('warehouses', WarehousesController::class);
+    Route::resource('towns', TownController::class);
+    Route::resource('areas', AreaController::class);
+
+});
+
+

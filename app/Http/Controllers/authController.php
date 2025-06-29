@@ -1,2 +1,30 @@
 <?php
- namespace App\Http\Controllers; use Illuminate\Http\Request; class authController extends Controller { public function index() { return view("\141\x75\x74\x68\56\x69\156\144\145\x78"); } public function login(Request $req) { if (auth()->attempt($req->only("\156\141\x6d\x65", "\x70\141\163\x73\167\157\x72\x64"))) { $req->session()->regenerate(); return redirect()->intended("\x2f"); } return back()->with("\145\x72\162\157\x72", "\127\162\x6f\156\147\x20\125\163\145\x72\x20\x4e\x61\155\x65\40\157\x72\40\120\x61\x73\x73\x77\x6f\x72\144"); } public function logout() { auth()->logout(); return redirect()->route("\x6c\x6f\147\151\x6e"); } }
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+class authController extends Controller
+{
+    public function index()
+    {
+        return view('auth.index');
+    }
+
+    public function login(Request $req)
+    {
+
+       if(auth()->attempt($req->only('name', 'password')))
+       {
+            $req->session()->regenerate();
+            return redirect()->intended('/');
+       }
+       return back()->with('error', 'Wrong User Name or Password');
+    }
+
+    public function logout()
+    {
+        auth()->logout();
+        return redirect()->route('login');
+    }
+}

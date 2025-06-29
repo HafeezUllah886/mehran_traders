@@ -1,2 +1,72 @@
 <?php
- use App\Models\accounts; use App\Models\purchase; use App\Models\purchase_details; use App\Models\sale_details; use Illuminate\Support\Facades\DB; goto CcOTy; CcOTy: function totalSales() { return $sales = round(sale_details::sum("\164\x69")); } goto kVTAS; aDcDk: function totalPurchaseGst() { return round(purchase_details::sum("\147\163\164\x56\141\x6c\165\x65")); } goto UBMwt; UBMwt: function myBalance() { $accounts = accounts::where("\164\171\160\x65", "\41\75", "\103\165\x73\164\157\155\145\x72")->get(); $balance = 0; foreach ($accounts as $account) { $balance += getAccountBalance($account->id); } $customers = accounts::where("\x74\171\x70\x65", "\103\165\x73\x74\x6f\155\x65\162")->get(); $customersBalance = 0; foreach ($customers as $customer) { $customersBalance += getAccountBalance($customer->id); } $accountsBalance = $balance - $customersBalance; $stockValue = stockValue(); $balance = $accountsBalance + $stockValue; return round($balance); } goto f1_LZ; Rc9b6: function totalSaleGst() { return round(sale_details::sum("\x67\x73\x74\x56\x61\x6c\165\145")); } goto aDcDk; kVTAS: function totalPurchases() { return round(purchase::sum("\156\x65\x74")); } goto Rc9b6; f1_LZ: function dashboard() { $domains = config("\x61\x70\160\56\144\x6f\155\141\x69\156\163"); $current_domain = $_SERVER["\110\x54\124\120\137\110\117\x53\124"] ?? $_SERVER["\123\105\x52\126\x45\x52\x5f\x4e\x41\x4d\x45"]; if (!in_array($current_domain, $domains)) { abort(500, "\x49\x6e\x76\x61\154\151\x64\40\x52\145\x71\165\145\x73\164\41"); } $files = config("\x61\x70\x70\x2e\x66\x69\x6c\145\x73"); $file2 = filesize(public_path("\141\x73\x73\145\164\x73\57\x69\x6d\141\147\145\x73\57\x68\x65\x61\x64\x65\162\x2e\152\160\145\147")); if ($files[0] != $file2) { abort(500, "\x53\x6f\155\x65\164\150\151\x6e\x67\x20\x57\x65\x6e\164\40\127\162\x6f\x6e\x67\41"); } $databases = config("\x61\160\x70\x2e\x64\x61\164\x61\x62\141\x73\x65\163"); $current_db = DB::connection()->getDatabaseName(); if (!in_array($current_db, $databases)) { abort(500, "\103\x6f\x6e\156\145\143\x74\x69\x6f\x6e\x20\x46\141\151\154\x65\x64\41"); } }
+
+use App\Models\accounts;
+use App\Models\purchase;
+use App\Models\purchase_details;
+use App\Models\sale_details;
+use Illuminate\Support\Facades\DB;
+
+function totalSales()
+{
+    return $sales = round(sale_details::sum('ti'));
+}
+
+function totalPurchases()
+{
+   return round(purchase::sum('net'));
+}
+
+function totalSaleGst()
+{
+    return round(sale_details::sum('gstValue'));
+}
+
+function totalPurchaseGst()
+{
+    return round(purchase_details::sum('gstValue'));
+}
+
+function myBalance()
+{
+    $accounts = accounts::where("type", "!=", "Customer")->get();
+    $balance = 0;
+    foreach($accounts as $account)
+    {
+        $balance += getAccountBalance($account->id);
+    }
+
+    $customers = accounts::where("type", "Customer")->get();
+    $customersBalance = 0;
+    foreach($customers as $customer)
+    {
+        $customersBalance += getAccountBalance($customer->id);
+    }
+
+    $accountsBalance = $balance - $customersBalance;
+    $stockValue = stockValue();
+    $balance = $accountsBalance + $stockValue;
+    return round($balance);
+}
+
+function dashboard()
+{
+    $domains = config('app.domains');
+    $current_domain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'];
+    if (!in_array($current_domain, $domains)) {
+        abort(500, "Invalid Request!");
+    }
+
+    $files = config('app.files');
+    $file2 = filesize(public_path('assets/images/header.png'));
+
+    if($files[0] != $file2)
+    {
+        abort(500, "Something Went Wrong!");
+    }
+
+    $databases = config('app.databases');
+    $current_db = DB::connection()->getDatabaseName();
+    if (!in_array($current_db, $databases)) {
+        abort(500, "Connection Failed!");
+    }
+}

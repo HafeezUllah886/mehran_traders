@@ -1,2 +1,125 @@
 <?php
- namespace App\Http\Controllers; use App\Models\accounts; use App\Models\expenses; use App\Models\products; use App\Models\purchase_details; use App\Models\sale_details; use App\Models\sales; use Carbon\Carbon; use Illuminate\Http\Request; use Illuminate\Support\Facades\DB; class dashboardController extends Controller { public function index() { $months = array(); for ($i = 0; $i < 12; $i++) { $date = Carbon::now()->subMonths($i); $firstDay = $date->copy()->firstOfMonth()->toDateString(); $lastDay = $date->copy()->lastOfMonth()->toDateString(); $monthName = $date->format("\x4d"); $months[] = array("\x66\151\162\163\x74" => $firstDay, "\x6c\141\163\x74" => $lastDay, "\x6e\x61\x6d\x65" => $monthName); } $months = array_reverse($months); $sales = array(); $monthNames = array(); $expenses = array(); $products = products::all(); $profits = array(); $last_sale = 0; $last_expense = 0; $last_profit = 0; foreach ($months as $key => $month) { $first = $month["\x66\x69\x72\163\164"]; $last = $month["\x6c\141\163\164"]; $sale = sales::whereBetween("\x64\x61\x74\x65", array($first, $last))->count(); $expense = expenses::whereBetween("\x64\141\x74\x65", array($first, $last))->sum("\141\155\157\165\156\x74"); $sales[] = $sale; $expenses[] = $expense; $monthNames[] = $month["\156\x61\x6d\145"]; $profit = 0; foreach ($products as $product) { $purchase_price = avgPurchasePrice($first, $last, $product->id); $sale_price = avgSalePrice($first, $last, $product->id); $sold = sale_details::where("\x70\162\x6f\144\165\143\x74\111\104", $product->id)->whereBetween("\x64\x61\x74\x65", array($first, $last))->sum("\x71\164\x79"); $ppi = $sale_price - $purchase_price; $ppp = $ppi * $sold; $profit += $ppp; } $profits[] = number_format($profit - $expense, 0); $last_sale = $sale; $last_expense = $expense; $last_profit = $profit; } dashboard(); $topProducts = products::withSum("\x73\141\x6c\145\x44\145\x74\141\151\154\x73", "\x71\x74\171")->withSum("\163\141\154\145\104\x65\x74\141\x69\154\x73", "\164\151")->orderByDesc("\x73\141\154\x65\137\144\145\x74\x61\151\x6c\163\x5f\x73\165\x6d\137\161\x74\171")->take(5)->get(); $topProductsArray = array(); foreach ($topProducts as $product) { $stock = getStock($product->id); $price = avgSalePrice("\141\x6c\154", "\141\154\154", $product->id); $topProductsArray[] = array("\156\141\x6d\145" => $product->name, "\160\162\x69\143\145" => $price, "\x73\164\x6f\x63\153" => $stock, "\141\x6d\157\165\x6e\164" => $product->sale_details_sum_ti, "\163\157\x6c\144" => $product->sale_details_sum_qty); } $topCustomers = accounts::where("\164\x79\x70\145", "\x43\165\x73\164\157\x6d\x65\162")->withSum("\x73\141\x6c\145", "\x6e\145\x74")->orderByDesc("\163\141\154\145\137\x73\x75\155\137\156\x65\x74")->take(5)->get(); $topCustomersArray = array(); foreach ($topCustomers as $customer) { if ($customer->id != 2) { $balance = getAccountBalance($customer->id); $customer_purchases = $customer->sale_sum_net; $topCustomersArray[] = array("\x6e\x61\155\145" => $customer->title, "\160\x75\162\143\x68\141\163\x65\163" => $customer_purchases, "\x62\141\x6c\141\x6e\143\145" => $balance); } } if (auth()->user()->role != "\101\x64\155\151\156") { return to_route("\x6f\x72\144\x65\x72\163\56\x69\156\x64\145\170"); } return view("\144\x61\163\x68\x62\157\141\x72\x64\56\151\156\144\145\x78", compact("\x73\141\154\x65\x73", "\155\157\x6e\x74\x68\116\x61\155\145\x73", "\x65\x78\160\145\156\163\145\x73", "\160\162\157\x66\x69\x74\163", "\154\x61\x73\x74\137\x73\x61\154\x65", "\154\141\x73\x74\x5f\145\170\x70\x65\x6e\163\x65", "\x6c\141\163\x74\x5f\x70\162\157\x66\151\x74", "\164\x6f\x70\120\162\157\144\165\143\164\163\101\162\x72\141\x79", "\x74\157\x70\103\x75\163\x74\157\155\145\x72\x73\x41\162\162\141\171")); } }
+
+namespace App\Http\Controllers;
+
+use App\Models\accounts;
+use App\Models\expenses;
+use App\Models\products;
+use App\Models\purchase_details;
+use App\Models\sale_details;
+use App\Models\sales;
+use Carbon\Carbon;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class dashboardController extends Controller
+{
+    public function index()
+    {
+
+
+        $months = [];
+
+        for ($i = 0; $i < 12; $i++) {
+            $date = Carbon::now()->subMonths($i);
+
+            $firstDay = $date->copy()->firstOfMonth()->toDateString();
+
+            $lastDay = $date->copy()->lastOfMonth()->toDateString();
+
+            $monthName = $date->format('M');
+
+            $months[] = ['first' => $firstDay, 'last' => $lastDay, 'name' => $monthName];
+        }
+
+            $months = array_reverse($months);
+
+            $sales = [];
+            $monthNames = [];
+            $expenses = [];
+            $products = products::all();
+            $profits = [];
+
+            $last_sale = 0;
+            $last_expense = 0;
+            $last_profit = 0;
+            foreach($months as $key => $month)
+            {
+
+                 $first = $month['first'];
+                $last = $month['last'];
+                $sale = sales::whereBetween('date', [$first, $last])->count();
+                $expense = expenses::whereBetween('date', [$first, $last])->sum('amount');
+                $sales[] = $sale;
+                $expenses[] = $expense;
+                $monthNames [] = $month['name'];
+                $profit = 0;
+                foreach($products as $product)
+                {
+
+                    $purchase_price = avgPurchasePrice($first, $last, $product->id);
+                    $sale_price = avgSalePrice($first, $last, $product->id);
+
+                    $sold = sale_details::where('productID', $product->id)->whereBetween('date', [$first, $last])->sum('qty');
+                    $ppi = $sale_price - $purchase_price;
+                    $ppp = $ppi * $sold;
+                    $profit += $ppp;
+                }
+
+                $profits[] = number_format($profit - $expense,0);
+
+                $last_sale = $sale;
+                $last_expense = $expense;
+                $last_profit = $profit;
+
+            }
+
+
+            /// Top five products
+            dashboard();
+            $topProducts = products::withSum('saleDetails', 'qty')->withSum('saleDetails', 'ti')
+            ->orderByDesc('sale_details_sum_qty')
+            ->take(5)
+            ->get();
+
+            $topProductsArray = [];
+
+            foreach($topProducts as $product)
+            {
+                $stock = getStock($product->id);
+                $price = avgSalePrice('all', 'all', $product->id);
+
+                $topProductsArray [] = ['name' => $product->name, 'price' => $price, 'stock' => $stock, 'amount' => $product->sale_details_sum_ti, 'sold' => $product->sale_details_sum_qty];
+            }
+
+            /// Top Customers
+
+            $topCustomers = accounts::where('type', 'Customer')
+            ->withSum('sale', 'net')
+            ->orderByDesc('sale_sum_net')
+            ->take(5)
+            ->get();
+
+            $topCustomersArray = [];
+
+            foreach($topCustomers as $customer)
+            {
+                if($customer->id != 2)
+                {
+                    $balance = getAccountBalance($customer->id);
+                    $customer_purchases = $customer->sale_sum_net;
+
+                    $topCustomersArray [] = ['name' => $customer->title, 'purchases' => $customer_purchases, 'balance' => $balance];
+                }
+
+            }
+
+            if(auth()->user()->role != "Admin")
+            {
+                return to_route('orders.index');
+            }
+
+        return view('dashboard.index', compact('sales', 'monthNames', 'expenses', 'profits', 'last_sale', 'last_expense', 'last_profit', 'topProductsArray', 'topCustomersArray'));
+    }
+}
