@@ -65,4 +65,7 @@ Route::middleware('auth', adminCheck::class)->group(function () {
 
     Route::get('/reports/expense', [expenseReportController::class, 'index'])->name('reportExpense');
     Route::get('/reports/expenseData/{from}/{to}/{category}', [expenseReportController::class, 'data'])->name('reportExpenseData');
+
+    Route::get('/reports/townsales', [townWiseSalesReport::class, 'index'])->name('reportTownSales');
+    Route::get('/reports/townsalesdata', [townWiseSalesReport::class, 'data'])->name('reportTownSalesData');
 });
