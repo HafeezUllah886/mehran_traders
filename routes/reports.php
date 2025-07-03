@@ -17,6 +17,7 @@ use App\Http\Controllers\reports\saleProductsReportController;
 use App\Http\Controllers\reports\salesGstReportController;
 use App\Http\Controllers\reports\salesManReportController;
 use App\Http\Controllers\reports\salesReportController;
+use App\Http\Controllers\reports\townWiseSalesReport;
 use App\Http\Middleware\adminCheck;
 use Illuminate\Support\Facades\Route;
 
